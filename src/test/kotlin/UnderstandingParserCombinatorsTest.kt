@@ -1,117 +1,164 @@
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 
 class UnderstandingParserCombinatorsTest: FunSpec() {
     init {
         test("test for parseChar") {
-
-            parseChar('A', "ABC")
+            val parseChar = parseChar('A')
+            parseChar.run("ABC")
                 .shouldBeRight()
-                .also { (charToMatch, remainingString) ->
+                .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A')
-                    remainingString.shouldBe("BC")
+                    remainingInput.shouldBe(InputState(listOf("ABC"), Position(0,1)))
                 }
 
-            parseChar('A', "ZBC")
-                .shouldBeLeft("Expecting 'A'. Got 'Z'")
+            parseChar.run("ZBC")
+                .shouldBeLeft()
+                .also { (label, error) ->
+                    label.shouldBe("A")
+                    error.shouldBe("Unexpected Z")
+                }
         }
 
         test("test for parseA") {
-            parseA("ABC")
+            parseA.run("ABC")
                 .shouldBeRight()
-                .also { (charToMatch, remainingString) ->
+                .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A')
-                    remainingString.shouldBe("BC")
+                    remainingInput.shouldBe(InputState(listOf("ABC"), Position(0,1)))
                 }
 
-            parseA("ZBC")
-                .shouldBeLeft("Expecting 'A'. Got 'Z'")
+            parseA.run("ZBC")
+                .shouldBeLeft()
+                .also { (label, error) ->
+                    label.shouldBe("A")
+                    error.shouldBe("Unexpected Z")
+                }
         }
 
         test("test A andThen B parser") {
-            parseAThenB("ABC")
+            parseAThenB.run("ABC")
                 .shouldBeRight()
-                .also { (charToMatch, remainingString) ->
+                .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A' to 'B')
-                    remainingString.shouldBe("C")
+                    remainingInput.shouldBe(InputState(listOf("ABC"), Position(0,2)))
                 }
 
-            parseAThenB("ZBC")
-                .shouldBeLeft("Expecting 'A'. Got 'Z'")
-            parseAThenB("AZC")
-                .shouldBeLeft("Expecting 'B'. Got 'Z'")
+            parseAThenB.run("ZBC")
+                .shouldBeLeft()
+                .also { (label, error) ->
+                    label.shouldBe("A")
+                    error.shouldBe("Unexpected Z")
+                }
+
+            parseAThenB.run("AZC")
+                .shouldBeLeft()
+                .also { (label, error) ->
+                    label.shouldBe("B")
+                    error.shouldBe("Unexpected Z")
+                }
         }
 
         test("test A orElse B parser") {
-            parseAorElseB("AZZ")
+            parseAorElseB.run("AZZ")
                 .shouldBeRight()
-                .also { (charToMatch, remainingString) ->
+                .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A')
-                    remainingString.shouldBe("ZZ")
+                    remainingInput.shouldBe(InputState(listOf("AZZ"), Position(0,1)))
                 }
 
-            parseAorElseB("BZZ")
+            parseAorElseB.run("BZZ")
                 .shouldBeRight()
-                .also { (charToMatch, remainingString) ->
+                .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('B')
-                    remainingString.shouldBe("ZZ")
+                    remainingInput.shouldBe(InputState(listOf("BZZ"), Position(0,1)))
                 }
 
-            parseAorElseB("CZZ")
-                .shouldBeLeft("Expecting 'B'. Got 'C'")
+            parseAorElseB.run("CZZ")
+                .shouldBeLeft()
+                .also { (label, error) ->
+                    label.shouldBe("B")
+                    error.shouldBe("Unexpected C")
+                }
         }
 
         test("test both 'andThen', 'orElse'") {
-            aAndThenBorC("ABZ")
+            aAndThenBorC.run("ABZ")
                 .shouldBeRight()
-                .also { (charToMatch, remainingString) ->
+                .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A' to 'B')
-                    remainingString.shouldBe("Z")
+                    remainingInput.shouldBe(InputState(listOf("ABZ"), Position(0,2)))
                 }
 
-            aAndThenBorC("ACZ")
+            aAndThenBorC.run("ACZ")
                 .shouldBeRight()
-                .also { (charToMatch, remainingString) ->
+                .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A' to 'C')
-                    remainingString.shouldBe("Z")
+                    remainingInput.shouldBe(InputState(listOf("ACZ"), Position(0,2)))
                 }
 
-            aAndThenBorC("QBZ")
-                .shouldBeLeft("Expecting 'A'. Got 'Q'")
+            aAndThenBorC.run("QBZ")
+                .shouldBeLeft()
+                .also { (label, error) ->
+                    label.shouldBe("A")
+                    error.shouldBe("Unexpected Q")
+                }
 
-            aAndThenBorC("AQZ")
-                .shouldBeLeft("Expecting 'C'. Got 'Q'")
+            aAndThenBorC.run("AQZ")
+                .shouldBeLeft()
+                .also { (label, error) ->
+                    label.shouldBe("C")
+                    error.shouldBe("Unexpected Q")
+                }
         }
 
         test("test anyOf") {
-            parseLowercase("aBC")
+            parseLowercase.run("aBC")
                 .shouldBeRight()
-                .also { (charToMatch, remainingString) ->
+                .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('a')
-                    remainingString.shouldBe("BC")
+                    remainingInput.shouldBe(InputState(listOf("aBC"), Position(0,1)))
                 }
 
-            parseLowercase("ABC")
-                .shouldBeLeft("Expecting 'z'. Got 'A'")
+            parseLowercase.run("ABC")
+                .shouldBeLeft()
+                .also { (label, error) ->
+                    label.shouldBe("z")
+                    error.shouldBe("Unexpected A")
+                }
 
-            parseDigit("1ABC")
+            parseDigit.run("1ABC")
                 .shouldBeRight()
-                .also { (charToMatch, remainingString) ->
+                .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('1')
-                    remainingString.shouldBe("ABC")
+                    remainingInput.shouldBe(InputState(listOf("1ABC"), Position(0,1)))
                 }
 
-            parseDigit("9ABC")
+            parseDigit.run("9ABC")
                 .shouldBeRight()
-                .also { (charToMatch, remainingString) ->
+                .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('9')
-                    remainingString.shouldBe("ABC")
+                    remainingInput.shouldBe(InputState(listOf("9ABC"), Position(0,1)))
                 }
 
-            parseDigit("|ABC")
-                .shouldBeLeft("Expecting '9'. Got '|'")
+            parseDigit.run("|ABC")
+                .shouldBeLeft()
+                .also { (label, error) ->
+                    label.shouldBe("9")
+                    error.shouldBe("Unexpected |")
+                }
+
+            printResult(parseDigitWithLabel.run("|ABC"))
+        }
+
+        test("read input characters test") {
+            "".toInputState().readAllChars().shouldBeEmpty()
+            "a".toInputState().readAllChars().shouldBe(listOf('a', '\n'))
+            "ab".toInputState().readAllChars().shouldBe(listOf('a', 'b', '\n'))
+            "a\nb".toInputState().readAllChars().shouldBe(listOf('a', '\n', 'b', '\n'))
         }
     }
 }
