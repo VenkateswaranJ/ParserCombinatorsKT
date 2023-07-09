@@ -1,23 +1,29 @@
-import arrow.core.*
+import arrow.core.Either
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.Some
+import arrow.core.left
 import arrow.core.raise.either
+import arrow.core.right
+import arrow.core.some
 
 typealias ParserLabel = String
 typealias ParserError = String
 typealias ParserResult<T> = Either<Triple<ParserLabel, ParserError, ParserPosition>, Pair<T, InputState>>
 typealias ParserFunction<T> = (InputState) -> ParserResult<T>
 
-data class Position(val line:Int = 0, val column: Int = 0)
+data class Position(val line: Int = 0, val column: Int = 0)
 data class InputState(val lines: List<String> = listOf(), val position: Position = Position())
-data class ParserPosition(val currentLine: String, val line:Int, val column: Int)
+data class ParserPosition(val currentLine: String, val line: Int, val column: Int)
 
-class Parser<T>(val parseFn: ParserFunction<T>, val label:  ParserLabel)
+class Parser<T>(val parseFn: ParserFunction<T>, val label: ParserLabel)
 
 fun <T> Parser<T>.runOnInput(inputState: InputState): ParserResult<T> = parseFn(inputState)
 fun <T> Parser<T>.run(inputString: String): ParserResult<T> = runOnInput(inputString.toInputState())
 
 fun <T> Parser<T>.setLabel(newLabel: ParserLabel): Parser<T> {
     val parserFn = { input: InputState ->
-        when(val result = runOnInput(input)) {
+        when (val result = runOnInput(input)) {
             is Either.Right -> result
             is Either.Left -> {
                 val (_, err, position) = result.value
@@ -47,12 +53,15 @@ fun <T> printResult(parserResult: ParserResult<T>) {
 
 fun satisfy(predicate: (Char) -> Boolean, label: ParserLabel): Parser<Char> {
     val parserFn = { input: InputState ->
-        val (remainingInput,charOpt) = input.nextChar()
-        when(charOpt) {
+        val (remainingInput, charOpt) = input.nextChar()
+        when (charOpt) {
             is None -> Triple(label, "No more input", input.toParserPosition()).left()
             is Some -> {
-                if(predicate(charOpt.value)) (charOpt.value to remainingInput).right()
-                else Triple(label, "Unexpected ${charOpt.value}", input.toParserPosition()).left()
+                if (predicate(charOpt.value)) {
+                    (charOpt.value to remainingInput).right()
+                } else {
+                    Triple(label, "Unexpected ${charOpt.value}", input.toParserPosition()).left()
+                }
             }
         }
     }
@@ -60,7 +69,7 @@ fun satisfy(predicate: (Char) -> Boolean, label: ParserLabel): Parser<Char> {
 }
 
 fun String.toInputState(): InputState =
-    if(isEmpty()) InputState() else InputState(lines(), Position())
+    if (isEmpty()) InputState() else InputState(lines(), Position())
 
 fun InputState.currentLine(): String = lines.getOrElse(position.line) { "end of file" }
 
@@ -87,7 +96,7 @@ fun InputState.nextChar(): Pair<InputState, Option<Char>> {
     val columnPos = position.column
     val currentLine = currentLine()
     return when {
-        linePos >= lines.size ->  this to None
+        linePos >= lines.size -> this to None
         columnPos < currentLine.length -> {
             val char = currentLine[columnPos]
             val newPos = position.copy(column = columnPos + 1)
@@ -104,7 +113,7 @@ fun InputState.nextChar(): Pair<InputState, Option<Char>> {
     }
 }
 
-infix fun <T, U> Parser<T>.andThen(other: Parser<U>): Parser<Pair<T,U>> {
+infix fun <T, U> Parser<T>.andThen(other: Parser<U>): Parser<Pair<T, U>> {
     val label = "$label andThen ${other.label}"
     val parserFn = { input: InputState ->
         either {
@@ -116,10 +125,10 @@ infix fun <T, U> Parser<T>.andThen(other: Parser<U>): Parser<Pair<T,U>> {
     return Parser(parserFn, label)
 }
 
-infix fun <T> Parser<T>.orElse(other: Parser<T>): Parser<T> {
+infix fun <T> Parser<out T>.orElse(other: Parser<out T>): Parser<out T> {
     val label = "$label orElse ${other.label}"
     val parserFn = { input: InputState ->
-        when(val result = runOnInput(input)) {
+        when (val result = runOnInput(input)) {
             is Either.Right -> result
             is Either.Left -> other.runOnInput(input)
         }
@@ -136,5 +145,4 @@ val bOrElseC = parseB orElse parseC
 val aAndThenBorC = parseA andThen bOrElseC
 val parseLowercase = anyOf(('a'..'z').toList())
 val parseDigit = anyOf(('0'..'9').toList())
-
 val parseDigitWithLabel = anyOf(('0'..'9').toList()).setLabel("digit")

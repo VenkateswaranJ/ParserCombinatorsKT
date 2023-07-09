@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.8.21"
+    id("org.jlleitschuh.gradle.ktlint") version "11.5.0"
     `java-library`
 }
 
@@ -15,6 +16,7 @@ val arrowVersion = "1.2.0-RC"
 dependencies {
     implementation("io.arrow-kt:arrow-core:$arrowVersion")
     implementation("io.arrow-kt:arrow-fx-coroutines:$arrowVersion")
+    implementation(kotlin("reflect"))
 }
 
 tasks.test {

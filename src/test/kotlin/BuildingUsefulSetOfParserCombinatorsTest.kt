@@ -5,7 +5,7 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class BuildingUsefulSetOfParserCombinatorsTest: FunSpec() {
+class BuildingUsefulSetOfParserCombinatorsTest : FunSpec() {
     init {
         test("test sequence: List<Parse<T>> to Parser<List<T>>") {
             val parsers = listOf(parseA, parseB, parseC)

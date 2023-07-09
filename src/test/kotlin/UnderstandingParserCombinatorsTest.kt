@@ -6,7 +6,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 
-class UnderstandingParserCombinatorsTest: FunSpec() {
+class UnderstandingParserCombinatorsTest : FunSpec() {
     init {
         test("test for parseChar") {
             val parseChar = parseChar('A')
@@ -14,7 +14,7 @@ class UnderstandingParserCombinatorsTest: FunSpec() {
                 .shouldBeRight()
                 .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A')
-                    remainingInput.shouldBe(InputState(listOf("ABC"), Position(0,1)))
+                    remainingInput.shouldBe(InputState(listOf("ABC"), Position(0, 1)))
                 }
 
             parseChar.run("ZBC")
@@ -30,7 +30,7 @@ class UnderstandingParserCombinatorsTest: FunSpec() {
                 .shouldBeRight()
                 .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A')
-                    remainingInput.shouldBe(InputState(listOf("ABC"), Position(0,1)))
+                    remainingInput.shouldBe(InputState(listOf("ABC"), Position(0, 1)))
                 }
 
             parseA.run("ZBC")
@@ -46,7 +46,7 @@ class UnderstandingParserCombinatorsTest: FunSpec() {
                 .shouldBeRight()
                 .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A' to 'B')
-                    remainingInput.shouldBe(InputState(listOf("ABC"), Position(0,2)))
+                    remainingInput.shouldBe(InputState(listOf("ABC"), Position(0, 2)))
                 }
 
             parseAThenB.run("ZBC")
@@ -69,14 +69,14 @@ class UnderstandingParserCombinatorsTest: FunSpec() {
                 .shouldBeRight()
                 .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A')
-                    remainingInput.shouldBe(InputState(listOf("AZZ"), Position(0,1)))
+                    remainingInput.shouldBe(InputState(listOf("AZZ"), Position(0, 1)))
                 }
 
             parseAorElseB.run("BZZ")
                 .shouldBeRight()
                 .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('B')
-                    remainingInput.shouldBe(InputState(listOf("BZZ"), Position(0,1)))
+                    remainingInput.shouldBe(InputState(listOf("BZZ"), Position(0, 1)))
                 }
 
             parseAorElseB.run("CZZ")
@@ -92,14 +92,14 @@ class UnderstandingParserCombinatorsTest: FunSpec() {
                 .shouldBeRight()
                 .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A' to 'B')
-                    remainingInput.shouldBe(InputState(listOf("ABZ"), Position(0,2)))
+                    remainingInput.shouldBe(InputState(listOf("ABZ"), Position(0, 2)))
                 }
 
             aAndThenBorC.run("ACZ")
                 .shouldBeRight()
                 .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('A' to 'C')
-                    remainingInput.shouldBe(InputState(listOf("ACZ"), Position(0,2)))
+                    remainingInput.shouldBe(InputState(listOf("ACZ"), Position(0, 2)))
                 }
 
             aAndThenBorC.run("QBZ")
@@ -122,7 +122,7 @@ class UnderstandingParserCombinatorsTest: FunSpec() {
                 .shouldBeRight()
                 .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('a')
-                    remainingInput.shouldBe(InputState(listOf("aBC"), Position(0,1)))
+                    remainingInput.shouldBe(InputState(listOf("aBC"), Position(0, 1)))
                 }
 
             parseLowercase.run("ABC")
@@ -136,14 +136,14 @@ class UnderstandingParserCombinatorsTest: FunSpec() {
                 .shouldBeRight()
                 .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('1')
-                    remainingInput.shouldBe(InputState(listOf("1ABC"), Position(0,1)))
+                    remainingInput.shouldBe(InputState(listOf("1ABC"), Position(0, 1)))
                 }
 
             parseDigit.run("9ABC")
                 .shouldBeRight()
                 .also { (charToMatch, remainingInput) ->
                     charToMatch.shouldBe('9')
-                    remainingInput.shouldBe(InputState(listOf("9ABC"), Position(0,1)))
+                    remainingInput.shouldBe(InputState(listOf("9ABC"), Position(0, 1)))
                 }
 
             parseDigit.run("|ABC")
@@ -163,7 +163,7 @@ class UnderstandingParserCombinatorsTest: FunSpec() {
                     var input = this@readAllChars
                     while (true) {
                         val (remainingInput, charOpt) = input.nextChar()
-                        when(charOpt) {
+                        when (charOpt) {
                             is None -> break
                             is Some -> { add(charOpt.value); input = remainingInput }
                         }

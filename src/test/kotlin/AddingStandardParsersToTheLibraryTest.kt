@@ -3,7 +3,7 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class AddingStandardParsersToTheLibraryTest: FunSpec() {
+class AddingStandardParsersToTheLibraryTest : FunSpec() {
     init {
         test("Testing parseString") {
             parseString("AB")
@@ -41,7 +41,7 @@ class AddingStandardParsersToTheLibraryTest: FunSpec() {
             spaces1.run("A").shouldBeLeft()
         }
 
-        test( "Testing Int and Float parsers") {
+        test("Testing Int and Float parsers") {
             parseInt()
                 .run("-123Z")
                 .shouldBeRight()

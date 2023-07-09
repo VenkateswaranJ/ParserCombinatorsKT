@@ -2,14 +2,17 @@ import arrow.core.None
 import arrow.core.Some
 
 fun parseChar(charToMatch: Char): Parser<Char> =
-    satisfy({c: Char -> c == charToMatch}, "$charToMatch")
+    satisfy({ c: Char -> c == charToMatch }, "$charToMatch")
 
-fun anyOf(charsToMatch: List<Char>): Parser<Char> =
+fun<T> choice(parsers: List<Parser<out T>>): Parser<out T> =
+    parsers.reduce { parseA, parseB -> parseA orElse parseB }
+
+fun anyOf(charsToMatch: List<Char>): Parser<out Char> =
     charsToMatch
         .map { char -> parseChar(char) }
-        .reduce { parseA, parseB -> parseA orElse parseB }
+        .let { choice(it) }
 
-fun manyChars(cp: Parser<Char>): Parser<String> =
+fun manyChars(cp: Parser<out Char>): Parser<String> =
     many(cp).mapP { it.joinToString("") }
 
 fun manyChars1(cp: Parser<Char>): Parser<String> =
@@ -36,7 +39,7 @@ fun parseInt(): Parser<Int> {
     return parseIntWithSign
         .mapP { (sign, digits) ->
             val i = digits.toInt()
-            when(sign) {
+            when (sign) {
                 is Some -> -i
                 is None -> i
             }
@@ -49,16 +52,16 @@ fun parseFloat(): Parser<Float> {
     val digits = manyChars1(digitChar())
     val floatWithSign =
         opt(parseChar('-')) andThen
-                digits andThen
-                parseChar('.') andThen
-                digits
+            digits andThen
+            parseChar('.') andThen
+            digits
     return floatWithSign
         .mapP {
             val (signWithDigits1AndPoint, digits2) = it
             val (signWithDigits1, _) = signWithDigits1AndPoint
             val (sign, digits1) = signWithDigits1
             val floatValue = "$digits1.$digits2".toFloat()
-            when(sign) {
+            when (sign) {
                 is None -> floatValue
                 is Some -> -floatValue
             }
