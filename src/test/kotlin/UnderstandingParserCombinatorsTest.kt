@@ -1,3 +1,5 @@
+import arrow.core.None
+import arrow.core.Some
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
@@ -151,10 +153,23 @@ class UnderstandingParserCombinatorsTest: FunSpec() {
                     error.shouldBe("Unexpected |")
                 }
 
-            printResult(parseDigitWithLabel.run("|ABC"))
+            parseDigitWithLabel.run("|ABC").shouldBeLeft()
         }
 
         test("read input characters test") {
+
+            fun InputState.readAllChars(): List<Char> =
+                buildList {
+                    var input = this@readAllChars
+                    while (true) {
+                        val (remainingInput, charOpt) = input.nextChar()
+                        when(charOpt) {
+                            is None -> break
+                            is Some -> { add(charOpt.value); input = remainingInput }
+                        }
+                    }
+                }
+
             "".toInputState().readAllChars().shouldBeEmpty()
             "a".toInputState().readAllChars().shouldBe(listOf('a', '\n'))
             "ab".toInputState().readAllChars().shouldBe(listOf('a', 'b', '\n'))

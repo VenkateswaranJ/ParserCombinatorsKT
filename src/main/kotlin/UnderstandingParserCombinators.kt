@@ -20,15 +20,15 @@ fun <T> Parser<T>.setLabel(newLabel: ParserLabel): Parser<T> {
         when(val result = runOnInput(input)) {
             is Either.Right -> result
             is Either.Left -> {
-                val (_,err) = result.value
-                Triple(newLabel, err, input.toParserPosition()).left()
+                val (_, err, position) = result.value
+                Triple(newLabel, err, position).left()
             }
         }
     }
     return Parser(parserFn, newLabel)
 }
 
-fun <T> printResult(parserResult: ParserResult<T>) =
+fun <T> printResult(parserResult: ParserResult<T>) {
     when (parserResult) {
         is Either.Right -> {
             val (value, _) = parserResult.value; println(value)
@@ -43,6 +43,7 @@ fun <T> printResult(parserResult: ParserResult<T>) =
             println("Line:$linePos Col:$colPos Error parsing $label\n$errorLine\n$failureCaret")
         }
     }
+}
 
 fun satisfy(predicate: (Char) -> Boolean, label: ParserLabel): Parser<Char> {
     val parserFn = { input: InputState ->
@@ -103,21 +104,6 @@ fun InputState.nextChar(): Pair<InputState, Option<Char>> {
     }
 }
 
-fun InputState.readAllChars(): List<Char> =
-    buildList {
-        var input = this@readAllChars
-        while (true) {
-            val (remainingInput, charOpt) = input.nextChar()
-            when(charOpt) {
-                is None -> break
-                is Some -> { add(charOpt.value); input = remainingInput }
-            }
-        }
-    }
-
-fun parseChar(charToMatch: Char): Parser<Char> =
-    satisfy({c: Char -> c == charToMatch}, "$charToMatch")
-
 infix fun <T, U> Parser<T>.andThen(other: Parser<U>): Parser<Pair<T,U>> {
     val label = "$label andThen ${other.label}"
     val parserFn = { input: InputState ->
@@ -140,14 +126,6 @@ infix fun <T> Parser<T>.orElse(other: Parser<T>): Parser<T> {
     }
     return Parser(parserFn, label)
 }
-
-fun anyOf(charsToMatch: List<Char>): Parser<Char> =
-    charsToMatch
-        .map { char -> parseChar(char) }
-        .reduce { parseA, parseB -> parseA orElse parseB }
-
-fun digitChar(): Parser<Char> = satisfy({ c: Char -> c.isDigit() }, "digit")
-fun whitespaceChar(): Parser<Char> = satisfy({ c: Char -> c.isWhitespace() }, "whitespace")
 
 val parseA = parseChar('A')
 val parseB = parseChar('B')

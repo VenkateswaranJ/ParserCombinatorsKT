@@ -28,16 +28,6 @@ fun <T> List<Parser<T>>.sequence(): Parser<List<T>> {
 
 fun<T> cons(head: T, tail: List<T>): List<T> = listOf(head) + tail
 
-/** String parser */
-fun parseString(stringToMatch: String): Parser<String> =
-    stringToMatch
-        .map { it }
-        .map { parseChar(it) }
-        .sequence()
-        .mapP { it.joinToString("") }
-
-val parseABC = parseString("ABC")
-
 fun <T> parseZeroOrMore(parser: Parser<T>, input: InputState): Pair<List<T>, InputState> =
     when(val result = parser.runOnInput(input)) {
         is Either.Left -> emptyList<T>() to input
@@ -123,11 +113,11 @@ fun <T,U> Parser<T>.bindP(transform: (T) -> Parser<U>): Parser<U> {
 fun <T,U> Parser<T>.mapUsingBind(transform: (T) -> U): Parser<U> =
     bindP(transform.andThen { returnP(it) })
 
+val parseABC = parseString("ABC")
 val manyA = many(parseA)
 val manyAB = many(parseString("AB"))
 val whitespaceChar = anyOf(listOf(' ','\t','\n'))
 val whitespace = many(whitespaceChar)
-
 val digit = anyOf(('1'..'9').toList())
 val digits = many1(digit)
 val number = digits.mapP { it.joinToString("").toInt() }
