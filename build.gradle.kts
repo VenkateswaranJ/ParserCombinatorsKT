@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "1.8.21"
-    id("org.jlleitschuh.gradle.ktlint") version "11.5.0"
+    kotlin("jvm") version "1.9.20"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
     `java-library`
 }
 
@@ -9,7 +9,7 @@ repositories {
 }
 
 java.toolchain {
-    languageVersion.set(JavaLanguageVersion.of(17))
+    languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 val arrowVersion = "1.2.0-RC"
@@ -23,8 +23,8 @@ tasks.test {
     useJUnitPlatform()
 }
 
-val kotestVersion = "5.6.2"
-val arrowKotestVersion = "1.3.3"
+val kotestVersion = "5.9.1"
+val arrowKotestVersion = "1.4.0"
 dependencies {
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion")

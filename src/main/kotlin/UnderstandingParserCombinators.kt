@@ -13,12 +13,15 @@ typealias ParserResult<T> = Either<Triple<ParserLabel, ParserError, ParserPositi
 typealias ParserFunction<T> = (InputState) -> ParserResult<T>
 
 data class Position(val line: Int = 0, val column: Int = 0)
+
 data class InputState(val lines: List<String> = listOf(), val position: Position = Position())
+
 data class ParserPosition(val currentLine: String, val line: Int, val column: Int)
 
 class Parser<T>(val parseFn: ParserFunction<T>, val label: ParserLabel)
 
 fun <T> Parser<T>.runOnInput(inputState: InputState): ParserResult<T> = parseFn(inputState)
+
 fun <T> Parser<T>.run(inputString: String): ParserResult<T> = runOnInput(inputString.toInputState())
 
 fun <T> Parser<T>.setLabel(newLabel: ParserLabel): Parser<T> {
@@ -37,7 +40,8 @@ fun <T> Parser<T>.setLabel(newLabel: ParserLabel): Parser<T> {
 fun <T> printResult(parserResult: ParserResult<T>) {
     when (parserResult) {
         is Either.Right -> {
-            val (value, _) = parserResult.value; println(value)
+            val (value, _) = parserResult.value
+            println(value)
         }
         is Either.Left -> {
             val (label, error, position) = parserResult.value
@@ -51,7 +55,10 @@ fun <T> printResult(parserResult: ParserResult<T>) {
     }
 }
 
-fun satisfy(predicate: (Char) -> Boolean, label: ParserLabel): Parser<Char> {
+fun satisfy(
+    predicate: (Char) -> Boolean,
+    label: ParserLabel
+): Parser<Char> {
     val parserFn = { input: InputState ->
         val (remainingInput, charOpt) = input.nextChar()
         when (charOpt) {
@@ -68,8 +75,7 @@ fun satisfy(predicate: (Char) -> Boolean, label: ParserLabel): Parser<Char> {
     return Parser(parserFn, label)
 }
 
-fun String.toInputState(): InputState =
-    if (isEmpty()) InputState() else InputState(lines(), Position())
+fun String.toInputState(): InputState = if (isEmpty()) InputState() else InputState(lines(), Position())
 
 fun InputState.currentLine(): String = lines.getOrElse(position.line) { "end of file" }
 

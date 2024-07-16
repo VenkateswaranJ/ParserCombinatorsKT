@@ -22,11 +22,14 @@ fun <T> returnP(value: T): Parser<T> {
     return Parser(parserFn, "Unknown label")
 }
 
-fun <T, U> Parser<(T) -> U>.applyP(xp: Parser<T>): Parser<U> =
-    (this andThen xp).mapP { (f, x) -> f(x) }
+fun <T, U> Parser<(T) -> U>.applyP(xp: Parser<T>): Parser<U> = (this andThen xp).mapP { (f, x) -> f(x) }
 
 fun <T, U, C> lift2(f: (T, U) -> C): (Parser<T>, Parser<U>) -> Parser<C> =
-    { parseT: Parser<T>, parseU: Parser<U> -> returnP(f.curried()).applyP(parseT).applyP(parseU) }
+    { parseT: Parser<T>, parseU: Parser<U> ->
+        returnP(
+            f.curried()
+        ).applyP(parseT).applyP(parseU)
+    }
 
 // should be archived with tail recursion, but my head is spinning if I think on how to maike it :)
 fun <T> List<Parser<T>>.sequence(): Parser<List<T>> {
@@ -34,9 +37,15 @@ fun <T> List<Parser<T>>.sequence(): Parser<List<T>> {
     return if (isEmpty()) returnP(emptyList()) else consP(first(), takeLast(size - 1).sequence())
 }
 
-fun<T> cons(head: T, tail: List<T>): List<T> = listOf(head) + tail
+fun <T> cons(
+    head: T,
+    tail: List<T>
+): List<T> = listOf(head) + tail
 
-fun <T> parseZeroOrMore(parser: Parser<T>, input: InputState): Pair<List<T>, InputState> =
+fun <T> parseZeroOrMore(
+    parser: Parser<T>,
+    input: InputState
+): Pair<List<T>, InputState> =
     when (val result = parser.runOnInput(input)) {
         is Either.Left -> emptyList<T>() to input
         is Either.Right -> {
@@ -85,16 +94,20 @@ fun buildSignedIntParser(): Parser<Int> {
     }
 }
 
-fun <T, U> Parser<T>.throwLeft(other: Parser<U>): Parser<U> =
-    (this andThen other).mapP { (_, right) -> right }
+fun <T, U> Parser<T>.throwLeft(other: Parser<U>): Parser<U> = (this andThen other).mapP { (_, right) -> right }
 
-fun <T, U> Parser<T>.throwRight(other: Parser<U>): Parser<T> =
-    (this andThen other).mapP { (left, _) -> left }
+fun <T, U> Parser<T>.throwRight(other: Parser<U>): Parser<T> = (this andThen other).mapP { (left, _) -> left }
 
-fun <L, M, R> between(left: Parser<L>, middle: Parser<M>, right: Parser<R>): Parser<M> =
-    left.throwLeft(middle).throwRight(right)
+fun <L, M, R> between(
+    left: Parser<L>,
+    middle: Parser<M>,
+    right: Parser<R>
+): Parser<M> = left.throwLeft(middle).throwRight(right)
 
-fun <T, U> sepBy1(listItemParser: Parser<T>, separator: Parser<U>): Parser<List<T>> {
+fun <T, U> sepBy1(
+    listItemParser: Parser<T>,
+    separator: Parser<U>
+): Parser<List<T>> {
     val sepThenP = separator.throwLeft(listItemParser)
     return (listItemParser andThen many(sepThenP))
         .mapP { (firstItemInList, remainingItemsInList) ->
@@ -102,8 +115,10 @@ fun <T, U> sepBy1(listItemParser: Parser<T>, separator: Parser<U>): Parser<List<
         }
 }
 
-fun <T, U> sepBy(listParser: Parser<T>, separator: Parser<U>): Parser<out List<T>> =
-    sepBy1(listParser, separator) orElse returnP(emptyList())
+fun <T, U> sepBy(
+    listParser: Parser<T>,
+    separator: Parser<U>
+): Parser<out List<T>> = sepBy1(listParser, separator) orElse returnP(emptyList())
 
 fun <T, U> Parser<T>.bindP(transform: (T) -> Parser<U>): Parser<U> {
     val parserFn = { input: InputState ->
@@ -118,8 +133,7 @@ fun <T, U> Parser<T>.bindP(transform: (T) -> Parser<U>): Parser<U> {
     return Parser(parserFn, "unknown")
 }
 
-fun <T, U> Parser<T>.mapUsingBind(transform: (T) -> U): Parser<U> =
-    bindP(transform.andThen { returnP(it) })
+fun <T, U> Parser<T>.mapUsingBind(transform: (T) -> U): Parser<U> = bindP(transform.andThen { returnP(it) })
 
 val parseABC = parseString("ABC")
 val manyA = many(parseA)

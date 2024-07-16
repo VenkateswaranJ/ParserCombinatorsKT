@@ -165,7 +165,10 @@ class UnderstandingParserCombinatorsTest : FunSpec() {
                         val (remainingInput, charOpt) = input.nextChar()
                         when (charOpt) {
                             is None -> break
-                            is Some -> { add(charOpt.value); input = remainingInput }
+                            is Some -> {
+                                add(charOpt.value)
+                                input = remainingInput
+                            }
                         }
                     }
                 }

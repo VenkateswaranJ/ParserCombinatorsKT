@@ -1,22 +1,18 @@
 import arrow.core.None
 import arrow.core.Some
 
-fun parseChar(charToMatch: Char): Parser<Char> =
-    satisfy({ c: Char -> c == charToMatch }, "$charToMatch")
+fun parseChar(charToMatch: Char): Parser<Char> = satisfy({ c: Char -> c == charToMatch }, "$charToMatch")
 
-fun<T> choice(parsers: List<Parser<out T>>): Parser<out T> =
-    parsers.reduce { parseA, parseB -> parseA orElse parseB }
+fun <T> choice(parsers: List<Parser<out T>>): Parser<out T> = parsers.reduce { parseA, parseB -> parseA orElse parseB }
 
 fun anyOf(charsToMatch: List<Char>): Parser<out Char> =
     charsToMatch
         .map { char -> parseChar(char) }
         .let { choice(it) }
 
-fun manyChars(cp: Parser<out Char>): Parser<String> =
-    many(cp).mapP { it.joinToString("") }
+fun manyChars(cp: Parser<out Char>): Parser<String> = many(cp).mapP { it.joinToString("") }
 
-fun manyChars1(cp: Parser<Char>): Parser<String> =
-    many1(cp).mapP { it.joinToString("") }
+fun manyChars1(cp: Parser<Char>): Parser<String> = many1(cp).mapP { it.joinToString("") }
 
 fun parseString(stringToMatch: String): Parser<String> =
     stringToMatch
@@ -27,6 +23,7 @@ fun parseString(stringToMatch: String): Parser<String> =
         .setLabel(stringToMatch)
 
 fun whitespaceChar(): Parser<Char> = satisfy({ c: Char -> c.isWhitespace() }, "whitespace")
+
 val spaces = many(whitespaceChar())
 val spaces1 = many1(whitespaceChar())
 

@@ -3,16 +3,30 @@ import arrow.core.Some
 import arrow.core.getOrElse
 
 sealed class JValue {
-    data class JString(val value: String) : JValue()
-    data class JNumber(val value: Float) : JValue()
-    data class JBool(val value: Boolean) : JValue()
-    object JNull : JValue()
-    data class JObject(val value: Map<String, JValue>) : JValue()
-    data class JArray(val value: List<JValue>) : JValue()
+    data class JString(
+        val value: String
+    ) : JValue()
+
+    data class JNumber(
+        val value: Float
+    ) : JValue()
+
+    data class JBool(
+        val value: Boolean
+    ) : JValue()
+
+    data object JNull : JValue()
+
+    data class JObject(
+        val value: Map<String, JValue>
+    ) : JValue()
+
+    data class JArray(
+        val value: List<JValue>
+    ) : JValue()
 }
 
 object JsonParser {
-
     // jValue forward references for jArray and jObject
     private var parserRef: Parser<out JValue> =
         Parser(
@@ -45,8 +59,7 @@ object JsonParser {
             "\\n" to '\n', // newline
             "\\r" to '\r', // cr
             "\\t" to '\t' // tab
-        )
-            .map { (toMatch, result) -> parseString(toMatch).mapP { result } }
+        ).map { (toMatch, result) -> parseString(toMatch).mapP { result } }
             .let { choice(it) }
             .setLabel("escaped char")
     private val backslash = parseChar('\\')
@@ -54,13 +67,16 @@ object JsonParser {
     private val hexDigit =
         anyOf(('0'..'9').toList() + ('A'..'F').toList() + ('a'..'f').toList())
     private val fourHexDigits = hexDigit andThen hexDigit andThen hexDigit andThen hexDigit
-    val jUnicodeChar = backslash.throwLeft(uChar).throwLeft(fourHexDigits)
-        .mapP {
-            val (remainingDigits1, fourthDigit) = it
-            val (remainingDigits2, thirdDigit) = remainingDigits1
-            val (firstDigit, secondDigit) = remainingDigits2
-            "$firstDigit$secondDigit$thirdDigit$fourthDigit".toInt(16).toChar()
-        }
+    val jUnicodeChar =
+        backslash
+            .throwLeft(uChar)
+            .throwLeft(fourHexDigits)
+            .mapP {
+                val (remainingDigits1, fourthDigit) = it
+                val (remainingDigits2, thirdDigit) = remainingDigits1
+                val (firstDigit, secondDigit) = remainingDigits2
+                "$firstDigit$secondDigit$thirdDigit$fourthDigit".toInt(16).toChar()
+            }
     private val quote = parseChar('\"').setLabel("quote")
     private val jChar = jUnescapedChar orElse jEscapedChar orElse jUnicodeChar
     private val quotedString = quote.throwLeft(manyChars(jChar)).throwRight(quote)
@@ -89,17 +105,18 @@ object JsonParser {
                 val signStr = optSign.getOrElse { "" }.toString()
                 val fractionPartStr =
                     fractionPart.getOrElse { "" }.let { digits -> ".$digits" }
-                val expPartStr = when (expPart) {
-                    is None -> ""
-                    is Some -> {
-                        val (optSignExponent, digits) = expPart.value
-                        "e" + optSignExponent.getOrElse { "" } + digits
+                val expPartStr =
+                    when (expPart) {
+                        is None -> ""
+                        is Some -> {
+                            val (optSignExponent, digits) = expPart.value
+                            "e" + optSignExponent.getOrElse { "" } + digits
+                        }
                     }
-                }
                 (signStr + intPart + fractionPartStr + expPartStr)
-                    .toFloat().let { float -> JValue.JNumber(float) }
-            }
-            .setLabel("number")
+                    .toFloat()
+                    .let { float -> JValue.JNumber(float) }
+            }.setLabel("number")
 
     // array
     private val leftBracket = parseChar('[').throwRight(spaces)
@@ -121,10 +138,13 @@ object JsonParser {
     private val keyValues = sepBy(keyValue, comma)
 
     // set up the main parser
-    private val jObject = between(leftBrace, keyValues, rightBrace)
-        .mapP { it.toMap() }
-        .mapP { JValue.JObject(it) }
-        .setLabel("object")
+    private val jObject =
+        between(leftBrace, keyValues, rightBrace)
+            .mapP { it.toMap() }
+            .mapP { JValue.JObject(it) }
+            .setLabel("object")
 
-    init { parserRef = choice(listOf(jNull, jBool, jNumber, jString, jArray, jObject)) }
+    init {
+        parserRef = choice(listOf(jNull, jBool, jNumber, jString, jArray, jObject))
+    }
 }
